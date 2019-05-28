@@ -1,0 +1,4 @@
+<launch>
+  <include files="$(find raspicat_basic)/launch/pimouse.launch" />
+  <node pkg="cat_corridor" name="wall_stop" type="wall_stop.py" required="true" />
+</launch>
