@@ -23,17 +23,21 @@ class WallStop():
             data.angular.z = 0
             print(self.sensor_values)
 
-            if self.sensor_values.right_forward < 150:
-                data.linear.x = 0
+            if self.sensor_values.right_forward < 500:
+                print("RF")
+                data.linear.x = 1.0
                 data.angular.z = 0
-            if self.sensor_values.left_forward < 150:
-                data.linear.x = 0
+            if self.sensor_values.left_forward < 500:
+                print("LF")
+                data.linear.x = 1.0
                 data.angular.z = 0
-            if self.sensor_values.right_side < 150:
-                data.linear.x = 0
+            if self.sensor_values.right_side < 500:
+                print("RS")
+                data.linear.x = 1.0
                 data.angular.z = 0
-            if self.sensor_values.left_side < 150:
-                data.linear.x = 0
+            if self.sensor_values.left_side < 500:
+                print("LS")
+                data.linear.x = 1.0
                 data.angular.z = 0
 
 
