@@ -73,7 +73,7 @@ class WallStop():
             # print(list(loads_iter(s)))
             order = list(self.loads_iter(s))[0]
             f.close()
-            comm = order["data"]
+            comm = unicode(order["data"], 'utf-8')
             print(comm)
 
 
