@@ -4,6 +4,8 @@ import rospy, copy
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger, TriggerResponse
 from raspicat_basic.msg import LightSensorValues
+import math
+import random
 
 
 import json
@@ -19,10 +21,12 @@ class WallStop():
 
         self.rotate = False
 
-        self.FIXED_KEYS = ["止まれ", "動け"]
+        self.FIXED_KEYS = ["止まれ", "動け"] # stop0, move1
         self.keys = []
         for key in self.FIXED_KEYS:
             self.keys.append(unicode(key, 'utf-8'))
+
+        self.state = 0
 
     def loads_iter(self, s):
         size = len(s)
@@ -44,12 +48,22 @@ class WallStop():
         rate = rospy.Rate(10)
         data = Twist()
 
+        flame = 0
+
         while not rospy.is_shutdown():
+            flame += 1
             data.linear.x = 0.0
             data.angular.z = 0
-            print(self.sensor_values)
+            # print(self.sensor_values)
 
-            # command data reading
+            print(flame)
+            if flame == 50:
+                data.angular.z = math.pi * (random.random() - 1.0) * 2.0
+
+            if flame >= 100:
+                flame = 0
+
+                # command data reading
             f = open('/home/daisha/~/Desktop/googleassis/shirei2.txt')
             s = f.read()
             # print(list(loads_iter(s)))
@@ -58,33 +72,33 @@ class WallStop():
             comm = order["data"].encode('utf-8')
             print(comm)
 
-            if comm == self.keys[0].encode('utf-8'):
+            if comm == self.keys[0].encode('utf-8') and self.state != 0:
                 print("command revised>>stop")
                 data.linear.x = 0.0
-                data.angular.z = 0
+                # data.angular.z = 0
 
-            if comm == self.keys[1].encode('utf-8'):
+            if comm == self.keys[1].encode('utf-8') and self.state != 1:
                 print("command revised>>move")
-                data.linear.x = 0.5
-                data.angular.z = 0
+                data.linear.x = 0.1
+                # data.angular.z = 0
 
 
             if self.sensor_values.right_forward < 700:
                 print("RF")
                 data.linear.x = 0.0
-                data.angular.z = 0
+                # data.angular.z = 0
             if self.sensor_values.left_forward < 700:
                 print("LF")
                 data.linear.x = 0.0
-                data.angular.z = 0
+                # data.angular.z = 0
             if self.sensor_values.right_side < 700:
                 print("RS")
                 data.linear.x = 0.0
-                data.angular.z = 0
+                # data.angular.z = 0
             if self.sensor_values.left_side < 700:
                 print("LS")
                 data.linear.x = 0.0
-                data.angular.z = 0
+                # data.angular.z = 0
 
 
 
