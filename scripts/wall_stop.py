@@ -1,8 +1,14 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import rospy, copy
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger, TriggerResponse
 from raspicat_basic.msg import LightSensorValues
+
+
+import json
+from json.decoder import WHITESPACE
+
 
 class WallStop():
     def __init__(self):
@@ -10,6 +16,26 @@ class WallStop():
 
         self.sensor_values = LightSensorValues()
         rospy.Subscriber('/lightsensors', LightSensorValues, self.callback_lightsensors)
+
+        self.rotate = False
+
+        self.FIXED_KEYS = ["止まれ", "動け"]
+        self.keys = []
+        for key in self.FIXED_KEYS:
+            self.keys.append(unicode(key, 'utf-8'))
+
+    def loads_iter(self, s):
+        size = len(s)
+        decoder = json.JSONDecoder()
+
+        end = 0
+        while True:
+            idx = WHITESPACE.match(s[end:]).end()
+            i = end + idx
+            if i >= size:
+                break
+            ob, end = decoder.raw_decode(s, i)
+            yield ob
 
     def callback_lightsensors(self,messages):
         self.sensor_values = messages
@@ -39,6 +65,16 @@ class WallStop():
                 print("LS")
                 data.linear.x = 0.0
                 data.angular.z = 0
+
+
+            # command data reading
+            f = open('/home/daisha/~/Desktop/googleassis/shirei2.txt')
+            s = f.read()
+            # print(list(loads_iter(s)))
+            order = list(self.loads_iter(s))[0]
+            f.close()
+            comm = order["data"]
+            print(comm)
 
 
             self.cmd_vel.publish(data)
