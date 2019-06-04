@@ -70,7 +70,7 @@ class WallStop():
 
             print(flame)
             if flame == 50:
-                data.angular.z = 0.4 + (random.random() - 0.5)/8.0
+                data.angular.z = 1.0 + (random.random() - 0.5)/4.0
                 if random.random() < 0.5:
                     data.angular.z *= -1.0
 
@@ -87,30 +87,32 @@ class WallStop():
             comm = order["data"].encode('utf-8')
             print(comm)
 
-            if comm == self.keys[0].encode('utf-8') and self.state != 0:
-                print("command revised>>stop")
+            if comm == self.keys[0].encode('utf-8'):
+                print("command>stop")
                 data.linear.x = 0.0
-                # data.angular.z = 0
+                data.angular.z = 0
 
-            if comm == self.keys[1].encode('utf-8') and self.state != 1:
-                print("command revised>>move")
+
+            if comm == self.keys[1].encode('utf-8'):
+                print("command>move")
                 data.linear.x = 0.1
                 # data.angular.z = 0
+            else:
+                data.angular.z = 0
 
-
-            if self.sensor_values.right_forward < 700:
+            if self.sensor_values.right_forward < 100:
                 print("RF")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.left_forward < 700:
+            if self.sensor_values.left_forward < 100:
                 print("LF")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.right_side < 700:
+            if self.sensor_values.right_side < 100:
                 print("RS")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.left_side < 700:
+            if self.sensor_values.left_side < 100:
                 print("LS")
                 data.linear.x = 0.0
                 # data.angular.z = 0
