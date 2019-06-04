@@ -27,6 +27,9 @@ class WallStop():
             self.keys.append(unicode(key, 'utf-8'))
 
         self.state = 0
+        if comm == self.keys[1].encode('utf-8'):
+            self.state = 1
+
 
     def loads_iter(self, s):
         size = len(s)
