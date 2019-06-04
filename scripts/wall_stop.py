@@ -51,7 +51,7 @@ class WallStop():
         flame = 0
         data.linear.x = 0.0
         data.angular.z = 0
-        
+
         while not rospy.is_shutdown():
             flame += 1
 
@@ -59,9 +59,12 @@ class WallStop():
 
             print(flame)
             if flame == 50:
-                data.angular.z = math.pi * (random.random() - 1.0) * 2.0
+                data.angular.z = 0.4 + (random.random() - 0.5)/8.0
+                if random.random() < 0.5:
+                    data.angular.z *= -1.0
 
             if flame >= 100:
+                data.angular.z = 0
                 flame = 0
 
                 # command data reading
