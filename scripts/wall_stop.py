@@ -49,11 +49,12 @@ class WallStop():
         data = Twist()
 
         flame = 0
-
+        data.linear.x = 0.0
+        data.angular.z = 0
+        
         while not rospy.is_shutdown():
             flame += 1
-            data.linear.x = 0.0
-            data.angular.z = 0
+
             # print(self.sensor_values)
 
             print(flame)
