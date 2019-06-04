@@ -45,17 +45,17 @@ class WallStop():
         data = Twist()
 
         while not rospy.is_shutdown():
-            # data.linear.x = 0.5
-            # data.angular.z = 0
+            data.linear.x = 0.0
+            data.angular.z = 0
             print(self.sensor_values)
 
             # command data reading
             f = open('/home/daisha/~/Desktop/googleassis/shirei2.txt')
             s = f.read()
             # print(list(loads_iter(s)))
-            order = list(self.loads_iter(s))[0]
+            order = list(self.loads_iter(s))[-1]
             f.close()
-            comm = unicode(order["data"], 'utf-8')
+            comm = order["data"].encode('utf-8')
             print(comm)
 
             if comm == self.keys[0]:
