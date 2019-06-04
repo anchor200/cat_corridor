@@ -26,6 +26,14 @@ class WallStop():
         for key in self.FIXED_KEYS:
             self.keys.append(unicode(key, 'utf-8'))
 
+
+        f = open('/home/daisha/~/Desktop/googleassis/shirei2.txt')
+        s = f.read()
+        # print(list(loads_iter(s)))
+        order = list(self.loads_iter(s))[-1]
+        f.close()
+        comm = order["data"].encode('utf-8')
+
         self.state = 0
         if comm == self.keys[1].encode('utf-8'):
             self.state = 1
