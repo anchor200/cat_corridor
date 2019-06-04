@@ -58,11 +58,13 @@ class WallStop():
             comm = order["data"].encode('utf-8')
             print(comm)
 
-            if comm == self.keys[0]:
+            if comm == self.keys[0].encode('utf-8'):
+                print("command revised>>stop")
                 data.linear.x = 0.0
                 data.angular.z = 0
 
-            if comm == self.keys[1]:
+            if comm == self.keys[1].encode('utf-8'):
+                print("command revised>>move")
                 data.linear.x = 0.5
                 data.angular.z = 0
 
