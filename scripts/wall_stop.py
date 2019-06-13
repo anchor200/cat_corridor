@@ -54,8 +54,14 @@ class WallStop():
 
     def get_line(self):
         line = ""
+        self.sock.timeout(0.1)
         while not rospy.is_shutdown():
-            v = self.sock.recv(1)
+            try:
+                v = self.sock.recv(1)
+            except socket.timeout as e:
+                print e
+                return "stable"
+
             if v == '\n':
                 return line
             line += v
