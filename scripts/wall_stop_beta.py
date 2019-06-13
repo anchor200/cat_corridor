@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import rospy, copy, os, socket
+import rospy, copy
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger, TriggerResponse
 from raspicat_basic.msg import LightSensorValues
@@ -14,19 +14,6 @@ from json.decoder import WHITESPACE
 
 class WallStop():
     def __init__(self):
-        rate = rospy.Rate(10)
-        while not rospy.is_shutdown():
-            try:
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.sock.connect(("localhost", 10500))
-                break
-            except:
-                rate.sleep()
-        rospy.on_shutdown(self.sock.close)
-
-
-
-
         self.cmd_vel = rospy.Publisher('/cmd_vel',Twist,queue_size=1)
 
         self.sensor_values = LightSensorValues()
@@ -50,16 +37,6 @@ class WallStop():
         self.state = 0
         if comm == self.keys[1].encode('utf-8'):
             self.state = 1
-
-
-    def get_line(self):
-        line = ""
-        while not rospy.is_shutdown():
-            v = self.sock.recv(1)
-            if v == '\n':
-                return line
-            line += v
-
 
 
     def loads_iter(self, s):
@@ -89,9 +66,6 @@ class WallStop():
         while not rospy.is_shutdown():
             flame += 1
 
-
-
-            print(self.get_line())
             # print(self.sensor_values)
 
             print(flame)
@@ -126,19 +100,19 @@ class WallStop():
             else:
                 data.angular.z = 0
 
-            if self.sensor_values.right_forward < 300:
+            if self.sensor_values.right_forward < 100:
                 print("RF")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.left_forward < 300:
+            if self.sensor_values.left_forward < 100:
                 print("LF")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.right_side < 300:
+            if self.sensor_values.right_side < 100:
                 print("RS")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.left_side < 300:
+            if self.sensor_values.left_side < 100:
                 print("LS")
                 data.linear.x = 0.0
                 # data.angular.z = 0
