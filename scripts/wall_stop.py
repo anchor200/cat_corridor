@@ -14,18 +14,6 @@ from json.decoder import WHITESPACE
 
 class WallStop():
     def __init__(self):
-        rate = rospy.Rate(10)
-        while not rospy.is_shutdown():
-            try:
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.sock.connect(("localhost", 10500))
-                break
-            except:
-                rate.sleep()
-        rospy.on_shutdown(self.sock.close)
-
-
-
 
         self.cmd_vel = rospy.Publisher('/cmd_vel',Twist,queue_size=1)
 
@@ -50,22 +38,6 @@ class WallStop():
         self.state = 0
         if comm == self.keys[1].encode('utf-8'):
             self.state = 1
-
-
-    def get_line(self):
-        line = ""
-        self.sock.timeout(0.1)
-        while not rospy.is_shutdown():
-            try:
-                v = self.sock.recv(1)
-            except socket.timeout as e:
-                print e
-                return "stable"
-
-            if v == '\n':
-                return line
-            line += v
-
 
 
     def loads_iter(self, s):
@@ -95,9 +67,6 @@ class WallStop():
         while not rospy.is_shutdown():
             flame += 1
 
-
-
-            print(self.get_line())
             # print(self.sensor_values)
 
             print(flame)
