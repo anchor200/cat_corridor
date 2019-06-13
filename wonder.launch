@@ -1,5 +1,4 @@
 <launch>
   <include file="$(find raspicat_basic)/launch/pimouse.launch" />
-  <include file="$(find voice_control)/voice.launch" />
   <node pkg="picat_run_corridor" name="wall_stop" type="wall_stop.py" required="true" />
 </launch>
