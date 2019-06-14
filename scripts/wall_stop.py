@@ -15,6 +15,7 @@ from json.decoder import WHITESPACE
 class WallStop():
     def __init__(self):
 
+
         self.cmd_vel = rospy.Publisher('/cmd_vel',Twist,queue_size=1)
 
         self.sensor_values = LightSensorValues()
@@ -36,8 +37,7 @@ class WallStop():
         comm = order["data"].encode('utf-8')
 
         self.state = 0
-        if comm == self.keys[1].encode('utf-8'):
-            self.state = 1
+
 
 
     def loads_iter(self, s):
@@ -72,19 +72,6 @@ class WallStop():
         while not rospy.is_shutdown():
             flame += 1
 
-            # print(self.sensor_values)
-
-            # print(flame)
-            if flame == 50:
-                data.angular.z = 1.0 + (random.random() - 0.5)/4.0
-                if random.random() < 0.5:
-                    data.angular.z *= -1.0
-
-            if flame >= 100:
-                data.angular.z = 0
-                flame = 0
-
-                # command data reading
             f = open('/home/daisha/~/Desktop/googleassis/shirei2.txt')
             s = f.read()
             # print(list(loads_iter(s)))
@@ -93,17 +80,38 @@ class WallStop():
             comm = order["data"].encode('utf-8')
             # print(comm)
 
-            if comm == self.keys[0].encode('utf-8'):
-                # print("command>stop")
+
+            if comm == self.keys[0].encode('utf-8') and self.state != 0:
+                self.state = 0
+                print("command>stop")
+
+            elif comm == self.keys[1].encode('utf-8') and self.state != 1:
+                self.state = 1
+                print("command>move")
+
+            elif self.state != 2:
+                self.state = 2
+
+
+            if self.state == 0:
                 data.linear.x = 0.0
                 data.angular.z = 0
 
-            if comm == self.keys[1].encode('utf-8'):
-                # print("command>move")
-                data.linear.x = 0.1
-                # data.angular.z = 0
-            else:
-                data.angular.z = 0
+            if self.state == 1:
+                data.linear.x = 0.0
+                if flame < 50:
+                    data.linear.x = 0.1
+
+                if flame == 50:
+                    data.angular.z = 1.0 + (random.random() - 0.5)/4.0
+                    if random.random() < 0.5:
+                        data.angular.z *= -1.0
+
+                if flame >= 100:
+                    data.angular.z = 0
+                    flame = 0
+
+
 
             if self.sensor_values.right_forward < 300:
                 print("RF")
@@ -122,14 +130,9 @@ class WallStop():
                 data.linear.x = 0.0
                 # data.angular.z = 0
 
-            if 50 < flame < 100:
-                ]data.linear.x = 0.0
-
 
             if comm == self.keys[1].encode('utf-8') or comm == self.keys[0].encode('utf-8'):
                 self.cmd_vel.publish(data)
-
-
 
             if comm == self.keys[2].encode('utf-8'):
                 self.cmd_vel.publish(data2)
