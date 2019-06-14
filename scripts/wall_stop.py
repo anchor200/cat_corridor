@@ -22,7 +22,7 @@ class WallStop():
 
         self.rotate = False
 
-        self.FIXED_KEYS = ["止まれ", "動け"] # stop0, move1
+        self.FIXED_KEYS = ["止まれ", "動け", "manual", "atsumare"] # stop0, move1
         self.keys = []
         for key in self.FIXED_KEYS:
             self.keys.append(unicode(key, 'utf-8'))
@@ -118,11 +118,8 @@ class WallStop():
                 data.linear.x = 0.0
                 # data.angular.z = 0
 
-
-
-
-
-            self.cmd_vel.publish(data)
+            if comm == self.keys[1].encode('utf-8') or comm == self.keys[0].encode('utf-8')
+                self.cmd_vel.publish(data)
             rate.sleep()
 
 if __name__ == '__main__':
