@@ -74,7 +74,7 @@ class WallStop():
 
             # print(self.sensor_values)
 
-            print(flame)
+            # print(flame)
             if flame == 50:
                 data.angular.z = 1.0 + (random.random() - 0.5)/4.0
                 if random.random() < 0.5:
@@ -91,15 +91,15 @@ class WallStop():
             order = list(self.loads_iter(s))[-1]
             f.close()
             comm = order["data"].encode('utf-8')
-            print(comm)
+            # print(comm)
 
             if comm == self.keys[0].encode('utf-8'):
-                print("command>stop")
+                # print("command>stop")
                 data.linear.x = 0.0
                 data.angular.z = 0
 
             if comm == self.keys[1].encode('utf-8'):
-                print("command>move")
+                # print("command>move")
                 data.linear.x = 0.1
                 # data.angular.z = 0
             else:
@@ -121,6 +121,10 @@ class WallStop():
                 print("LS")
                 data.linear.x = 0.0
                 # data.angular.z = 0
+
+            if 50 < flame < 100:
+                ]data.linear.x = 0.0
+
 
             if comm == self.keys[1].encode('utf-8') or comm == self.keys[0].encode('utf-8'):
                 self.cmd_vel.publish(data)
