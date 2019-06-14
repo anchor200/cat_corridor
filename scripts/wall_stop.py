@@ -118,8 +118,18 @@ class WallStop():
                 data.linear.x = 0.0
                 # data.angular.z = 0
 
-            if comm == self.keys[1].encode('utf-8') or comm == self.keys[0].encode('utf-8')
+            if comm == self.keys[1].encode('utf-8') or comm == self.keys[0].encode('utf-8'):
                 self.cmd_vel.publish(data)
+
+
+            data2 = Twist()
+            data2.angular.z = 0
+            data2.linear.x = 0.0
+            if comm == self.keys[2].encode('utf-8'):
+                self.cmd_vel.publish(data2)
+
+
+
             rate.sleep()
 
 if __name__ == '__main__':
