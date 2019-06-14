@@ -23,7 +23,7 @@ class WallStop():
 
         self.rotate = False
 
-        self.FIXED_KEYS = ["止まれ", "動け", "manual", "atsumare"] # stop0, move1
+        self.FIXED_KEYS = ["止まれ", "動け", "atsumare", "manual"] # stop0, move1
         self.keys = []
         for key in self.FIXED_KEYS:
             self.keys.append(unicode(key, 'utf-8'))
@@ -36,7 +36,15 @@ class WallStop():
         f.close()
         comm = order["data"].encode('utf-8')
 
+        self.event_lists = 0
+        with open('/home/daisha/~/Desktop/googleassis/shirei3.txt') as f:
+            s = f.read()
+            order = list(self.loads_iter(s))[-1]
+            self.event_lists = len(list(self.loads_iter(s)))
+
+
         self.state = 0
+        self.event_proc = False
 
 
 
@@ -62,6 +70,8 @@ class WallStop():
         data2 = Twist()
 
         flame = 0
+        before_event = 0
+        eventflame = 0
         data.linear.x = 0.0
         data.angular.z = 0
 
@@ -81,16 +91,42 @@ class WallStop():
             # print(comm)
 
 
-            if comm == self.keys[0].encode('utf-8') and self.state != 0:
-                self.state = 0
-                print("command>stop")
+            if comm == self.keys[0].encode('utf-8') and self.event_proc == False:
+                if self.state != 0:
+                    self.state = 0
+                    print("command>stop")
 
-            elif comm == self.keys[1].encode('utf-8') and self.state != 1:
-                self.state = 1
-                print("command>move")
+            if comm == self.keys[1].encode('utf-8') and self.event_proc == False:
+                if self.state != 1:
+                    self.state = 1
+                    print("command>move")
 
-            elif self.state != 2:
-                self.state = 2
+
+            with open('/home/daisha/~/Desktop/googleassis/shirei3.txt') as f:
+                s = f.read()
+                order = list(self.loads_iter(s))[-1]
+                if self.event_lists < len(list(self.loads_iter(s))):
+                    self.event_lists = len(list(self.loads_iter(s)))
+                    comm2 = order["data"].encode('utf-8')
+                    if comm2 == self.keys[2].encode('utf-8') and self.state != 2:
+                        self.state = 2
+                        before_event = self.state
+
+
+            if self.state == 2:
+                if self.event_proc == False:
+                    print("event started")
+                    self.event_proc = True
+                    eventflame = 40
+                else:
+                    if eventflame > 0:
+                        eventflame -= 1
+                    if eventflame == 0:
+                        print("event ended")
+                        self.event_proc = False
+                        self.state = before_event
+
+
 
 
             if self.state == 0:
@@ -103,7 +139,7 @@ class WallStop():
                     data.linear.x = 0.1
 
                 if flame == 50:
-                    data.angular.z = 1.0 + (random.random() - 0.5)/4.0
+                    data.angular.z = (1.0 + (random.random() - 0.5)/4.0)/1.5
                     if random.random() < 0.5:
                         data.angular.z *= -1.0
 
@@ -113,32 +149,39 @@ class WallStop():
 
 
 
-            if self.sensor_values.right_forward < 300:
+            if self.sensor_values.right_forward < 500:
                 print("RF")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.left_forward < 300:
+            if self.sensor_values.left_forward < 500:
                 print("LF")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.right_side < 300:
+            if self.sensor_values.right_side < 500:
                 print("RS")
                 data.linear.x = 0.0
                 # data.angular.z = 0
-            if self.sensor_values.left_side < 300:
+            if self.sensor_values.left_side < 500:
                 print("LS")
                 data.linear.x = 0.0
                 # data.angular.z = 0
 
 
-            if comm == self.keys[1].encode('utf-8') or comm == self.keys[0].encode('utf-8'):
-                self.cmd_vel.publish(data)
-
-            if comm == self.keys[2].encode('utf-8'):
-                self.cmd_vel.publish(data2)
 
 
 
+            if eventflame > 0: # events
+                if self.state == 2:
+                    data.linear.x = 0.0
+                    data.angular.z = 2
+                    if eventflame > 20:
+                        data.angular.z = -2
+
+
+
+
+
+            self.cmd_vel.publish(data)
             rate.sleep()
 
 if __name__ == '__main__':
