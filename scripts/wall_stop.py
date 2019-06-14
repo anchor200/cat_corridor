@@ -59,10 +59,15 @@ class WallStop():
     def run(self):
         rate = rospy.Rate(10)
         data = Twist()
+        data2 = Twist()
 
         flame = 0
         data.linear.x = 0.0
         data.angular.z = 0
+
+
+        data2.angular.z = 0
+        data2.linear.x = 0.0
 
         while not rospy.is_shutdown():
             flame += 1
@@ -88,18 +93,21 @@ class WallStop():
             comm = order["data"].encode('utf-8')
             print(comm)
 
+            f = open('/home/daisha/~/Desktop/googleassis/effect.txt', 'a')
             if comm == self.keys[0].encode('utf-8'):
+                f.write('stop\n')
                 print("command>stop")
                 data.linear.x = 0.0
                 data.angular.z = 0
 
-
             if comm == self.keys[1].encode('utf-8'):
+                f.write('move\n')
                 print("command>move")
                 data.linear.x = 0.1
                 # data.angular.z = 0
             else:
                 data.angular.z = 0
+            f.close()
 
             if self.sensor_values.right_forward < 300:
                 print("RF")
@@ -122,9 +130,7 @@ class WallStop():
                 self.cmd_vel.publish(data)
 
 
-            data2 = Twist()
-            data2.angular.z = 0
-            data2.linear.x = 0.0
+
             if comm == self.keys[2].encode('utf-8'):
                 self.cmd_vel.publish(data2)
 
