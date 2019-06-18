@@ -23,7 +23,7 @@ class WallStop():
 
         self.rotate = False
 
-        self.FIXED_KEYS = ["止まれ", "動け", "atsumare", "manual"] # stop0, move1
+        self.FIXED_KEYS = ["止まれ", "動け", "atsumare", "teishi"] # stop0, move1
         self.keys = []
         for key in self.FIXED_KEYS:
             self.keys.append(unicode(key, 'utf-8'))
