@@ -22,8 +22,9 @@ class WallStop():
         rospy.Subscriber('/lightsensors', LightSensorValues, self.callback_lightsensors)
 
         self.rotate = False
+        self.manual = False  # 命令に従うモードかどうか
 
-        self.FIXED_KEYS = ["止まれ", "動け", "atsumare", "manual"] # stop0, move1
+        self.FIXED_KEYS = ["止まれ", "動け", "atsumare", "teishi"] # stop0, move1
         self.keys = []
         for key in self.FIXED_KEYS:
             self.keys.append(unicode(key, 'utf-8'))
@@ -74,6 +75,8 @@ class WallStop():
         eventflame = 0
         data.linear.x = 0.0
         data.angular.z = 0
+        comm = ""
+        self.ratio = 1.0
 
 
         data2.angular.z = 0
@@ -85,9 +88,11 @@ class WallStop():
             f = open('/home/daisha/~/Desktop/googleassis/shirei2.txt')
             s = f.read()
             # print(list(loads_iter(s)))
-            order = list(self.loads_iter(s))[-1]
+            if len(list(self.loads_iter(s))) >= 1:
+                order = list(self.loads_iter(s))[-1]
+                comm = order["data"].encode('utf-8')
             f.close()
-            comm = order["data"].encode('utf-8')
+
             # print(comm)
 
 
@@ -108,12 +113,11 @@ class WallStop():
                 if self.event_lists < len(list(self.loads_iter(s))):
                     self.event_lists = len(list(self.loads_iter(s)))
                     comm2 = order["data"].encode('utf-8')
-                    if comm2 == self.keys[2].encode('utf-8') and self.state != 2:
+                    if comm2 == self.keys[3].encode('utf-8') and self.state != 2:
                         self.state = 2
                         before_event = self.state
 
-
-            if self.state == 2:
+            if self.state == 2 or self.state == 3:
                 if self.event_proc == False:
                     print("event started")
                     self.event_proc = True
@@ -126,9 +130,6 @@ class WallStop():
                         self.event_proc = False
                         self.state = before_event
 
-
-
-
             if self.state == 0:
                 data.linear.x = 0.0
                 data.angular.z = 0
@@ -136,10 +137,10 @@ class WallStop():
             if self.state == 1:
                 data.linear.x = 0.0
                 if flame < 50:
-                    data.linear.x = 0.1
+                    data.linear.x = 0.13 * self.ratio
 
                 if flame == 50:
-                    data.angular.z = (1.0 + (random.random() - 0.5)/4.0)/1.5
+                    data.angular.z = (1.0 + (random.random() - 0.5)/4.0)/1.5 * self.ratio
                     if random.random() < 0.5:
                         data.angular.z *= -1.0
 
@@ -147,6 +148,26 @@ class WallStop():
                     data.angular.z = 0
                     flame = 0
 
+
+
+            comm3 = ""
+            with open('/home/daisha/~/Desktop/googleassis/effect.txt') as f:
+                s = f.read()
+                if len(list(self.loads_iter(s))) != 0:
+                    order = list(self.loads_iter(s))[-1]
+                    comm3 = order["data"].encode('utf-8')
+            if comm3 == self.keys[3].encode('utf-8'):
+                self.manual = True
+                self.ratio *= 0.95
+            else:
+                self.manual = False
+                if self.ratio < 1.0:
+                    self.ratio *= 1.01
+                if self.ratio > 1.0:
+                    self.ratio = 1.0
+
+
+            print(self.manual)
 
 
             if self.sensor_values.right_forward < 500:
@@ -179,6 +200,8 @@ class WallStop():
 
 
 
+            # print(self.ratio)
+            # print(data.linear.x)
 
 
             self.cmd_vel.publish(data)
