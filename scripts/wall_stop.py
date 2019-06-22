@@ -113,7 +113,7 @@ class WallStop():
                 if self.event_lists < len(list(self.loads_iter(s))):
                     self.event_lists = len(list(self.loads_iter(s)))
                     comm2 = order["data"].encode('utf-8')
-                    if comm2 == self.keys[3].encode('utf-8') and self.state != 2:
+                    if comm2 == self.keys[2].encode('utf-8') and self.state != 2:
                         self.state = 2
                         before_event = self.state
 
