@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import rospy, copy, os, socket
+from std_msgs.msg import UInt16
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Trigger, TriggerResponse
 from raspicat_basic.msg import LightSensorValues
@@ -17,6 +18,7 @@ class WallStop():
 
 
         self.cmd_vel = rospy.Publisher('/cmd_vel',Twist,queue_size=1)
+        self.buzzer = rospy.Publisher('/buzzer', UInt16, queue_size=1)
 
         self.sensor_values = LightSensorValues()
         rospy.Subscriber('/lightsensors', LightSensorValues, self.callback_lightsensors)
@@ -24,7 +26,7 @@ class WallStop():
         self.rotate = False
         self.manual = False  # 命令に従うモードかどうか
 
-        self.FIXED_KEYS = ["止まれ", "動け", "atsumare", "teishi"] # stop0, move1
+        self.FIXED_KEYS = ["止まれ", "動け", "atsumare", "teishi", "detected"] # stop0, move1
         self.keys = []
         for key in self.FIXED_KEYS:
             self.keys.append(unicode(key, 'utf-8'))
@@ -69,6 +71,7 @@ class WallStop():
         rate = rospy.Rate(10)
         data = Twist()
         data2 = Twist()
+        pitch = 0
 
         flame = 0
         before_event = 0
@@ -78,12 +81,16 @@ class WallStop():
         comm = ""
         self.ratio = 1.0
 
+        self.to_wall = 1000
+
 
         data2.angular.z = 0
         data2.linear.x = 0.0
 
         while not rospy.is_shutdown():
             flame += 1
+            if self.state < 2:
+                pitch = 0
 
             f = open('/home/daisha/~/Desktop/googleassis/shirei2.txt')
             s = f.read()
@@ -116,12 +123,17 @@ class WallStop():
                     if comm2 == self.keys[2].encode('utf-8') and self.state != 2:
                         self.state = 2
                         before_event = self.state
+                    if comm2 == self.keys[4].encode('utf-8') and self.state != 2:
+                        self.state = 3
+                        before_event = self.state
 
             if self.state == 2 or self.state == 3:
                 if self.event_proc == False:
                     print("event started")
                     self.event_proc = True
                     eventflame = 40
+                    if self.state == 3:
+                        eventflame = 300
                 else:
                     if eventflame > 0:
                         eventflame -= 1
@@ -129,20 +141,30 @@ class WallStop():
                         print("event ended")
                         self.event_proc = False
                         self.state = before_event
+                        flame = 49
 
             if self.state == 0:
                 data.linear.x = 0.0
                 data.angular.z = 0
 
-            if self.state == 1:
+            if self.state == 1 or self.state == 3:
                 data.linear.x = 0.0
+                """if flame < 10:
+                    data.linear.x = 0.01 * self.ratio
+                elif flame < 20:
+                    data.linear.x = 0.03 * self.ratio
+                elif flame < 40:
+                    data.linear.x = 0.05 * self.ratio"""
                 if flame < 50:
-                    data.linear.x = 0.13 * self.ratio
+                    data.linear.x = 0.06 * self.ratio
 
                 if flame == 50:
-                    data.angular.z = (1.0 + (random.random() - 0.5)/4.0)/1.5 * self.ratio
+                    data.angular.z = (1.0 + (random.random() - 0.5)/4.0)/1.9 * self.ratio
                     if random.random() < 0.5:
                         data.angular.z *= -1.0
+
+                if flame >= 80:
+                    data.angular.z += 0.05 * (0.0 - data.angular.z)
 
                 if flame >= 100:
                     data.angular.z = 0
@@ -167,29 +189,36 @@ class WallStop():
                     self.ratio = 1.0
 
 
-            print(self.manual)
+            # print(self.manual)
 
 
-            if self.sensor_values.right_forward < 500:
-                print("RF")
+            to_wall_buf = min(self.sensor_values.right_forward, self.sensor_values.left_forward, self.sensor_values.right_side, self.sensor_values.left_side)
+            if to_wall_buf < 700:
+                if self.to_wall - to_wall_buf > 0:
+                    data.linear.x = 0.06 * to_wall_buf/900
+
+            if to_wall_buf < 400:
                 data.linear.x = 0.0
+
+            self.to_wall = to_wall_buf
+
+
+            print(data.linear.x)
+
+
+            """if self.sensor_values.right_forward < 500:
+                # print("RF")
+                # data.linear.x = 0.0
                 # data.angular.z = 0
             if self.sensor_values.left_forward < 500:
-                print("LF")
-                data.linear.x = 0.0
-                # data.angular.z = 0
+                # print("LF")
+                # data.linear.x = 0.0
             if self.sensor_values.right_side < 500:
-                print("RS")
-                data.linear.x = 0.0
-                # data.angular.z = 0
+                # print("RS")
+                # data.linear.x = 0.0
             if self.sensor_values.left_side < 500:
-                print("LS")
-                data.linear.x = 0.0
-                # data.angular.z = 0
-
-
-
-
+                # print("LS")
+                # data.linear.x = 0.0"""
 
             if eventflame > 0: # events
                 if self.state == 2:
@@ -197,14 +226,28 @@ class WallStop():
                     data.angular.z = 2
                     if eventflame > 20:
                         data.angular.z = -2
-
+                    if eventflame < 5:
+                        data.angular.z = 0
+                if self.state == 3:
+                    # data.linear.x = 0.0
+                    if eventflame > 200:
+                        pitch = 2000
+                    elif eventflame > 100:
+                        pitch = 1000
+                    elif eventflame > 0:
+                        pitch = 441
+                    self.buzzer.publish(pitch)
+                    continue
+                    # data.angular.z = 0
 
 
             # print(self.ratio)
             # print(data.linear.x)
 
+            if self.state != 3:
+                self.cmd_vel.publish(data)
 
-            self.cmd_vel.publish(data)
+
             rate.sleep()
 
 if __name__ == '__main__':
@@ -217,3 +260,5 @@ if __name__ == '__main__':
 
     w = WallStop()
     w.run()
+
+
