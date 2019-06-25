@@ -131,7 +131,7 @@ class WallStop():
                 if self.event_proc == False:
                     print("event started")
                     self.event_proc = True
-                    eventflame = 40
+                    eventflame = 85
                     if self.state == 3:
                         eventflame = 300
                 else:
@@ -156,7 +156,7 @@ class WallStop():
                 elif flame < 40:
                     data.linear.x = 0.05 * self.ratio"""
                 if flame < 50:
-                    data.linear.x = 0.06 * self.ratio
+                    data.linear.x = 0.09 * self.ratio
 
                 if flame == 50:
                     data.angular.z = (1.0 + (random.random() - 0.5)/4.0)/1.9 * self.ratio
@@ -172,24 +172,25 @@ class WallStop():
 
 
 
-            comm3 = ""
-            with open('/home/daisha/~/Desktop/googleassis/effect.txt') as f:
-                s = f.read()
-                if len(list(self.loads_iter(s))) != 0:
-                    order = list(self.loads_iter(s))[-1]
-                    comm3 = order["data"].encode('utf-8')
-            if comm3 == self.keys[3].encode('utf-8'):
-                self.manual = True
-                self.ratio *= 0.95
-            else:
-                self.manual = False
-                if self.ratio < 1.0:
-                    self.ratio *= 1.01
-                if self.ratio > 1.0:
-                    self.ratio = 1.0
+                comm3 = ""
+                with open('/home/daisha/~/Desktop/googleassis/effect.txt') as f:
+                    s = f.read()
+                    if len(list(self.loads_iter(s))) != 0:
+                        order = list(self.loads_iter(s))[-1]
+                        comm3 = order["data"].encode('utf-8')
+                if comm3 == self.keys[3].encode('utf-8'):
+                    self.manual = True
+                    if self.ratio > 0.3:
+                        self.ratio *= 0.98
+                else:
+                    self.manual = False
+                    if self.ratio < 1.0:
+                        self.ratio *= 1.01
+                    if self.ratio > 1.0:
+                        self.ratio = 1.0
 
 
-            # print(self.manual)
+                print(self.manual)
 
 
             to_wall_buf = min(self.sensor_values.right_forward, self.sensor_values.left_forward, self.sensor_values.right_side, self.sensor_values.left_side)
@@ -203,31 +204,17 @@ class WallStop():
             self.to_wall = to_wall_buf
 
 
-            print(data.linear.x)
 
-
-            """if self.sensor_values.right_forward < 500:
-                # print("RF")
-                # data.linear.x = 0.0
-                # data.angular.z = 0
-            if self.sensor_values.left_forward < 500:
-                # print("LF")
-                # data.linear.x = 0.0
-            if self.sensor_values.right_side < 500:
-                # print("RS")
-                # data.linear.x = 0.0
-            if self.sensor_values.left_side < 500:
-                # print("LS")
-                # data.linear.x = 0.0"""
 
             if eventflame > 0: # events
                 if self.state == 2:
                     data.linear.x = 0.0
-                    data.angular.z = 2
-                    if eventflame > 20:
-                        data.angular.z = -2
-                    if eventflame < 5:
-                        data.angular.z = 0
+                    if eventflame > 70:
+                        data.angular.z = 0.08*(85-eventflame)
+                    if eventflame > 45:
+                        data.angular.z = 1.2
+                    if eventflame < 12:
+                        data.angular.z = 0.1*eventflame
                 if self.state == 3:
                     # data.linear.x = 0.0
                     if eventflame > 200:
@@ -240,9 +227,14 @@ class WallStop():
                     continue
                     # data.angular.z = 0
 
+            if self.state == 0:
+                data.linear.x = 0.0
+                data.angular.z = 0
 
             # print(self.ratio)
             # print(data.linear.x)
+
+            print([data.linear.x,data.angular.z,self.ratio,self.state,flame])
 
             if self.state != 3:
                 self.cmd_vel.publish(data)
